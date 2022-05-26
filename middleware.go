@@ -29,3 +29,15 @@ func LoggerMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		log.Printf("Response[%s %s %s %s]", r.RemoteAddr, r.Method, r.URL, end.Sub(start))
 	})
 }
+
+func ApiMethodvalidatorMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		registeredRoute := AvailableRoutes[r.URL.Path]
+		if registeredRoute.Method != r.Method {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		} else {
+			next.ServeHTTP(w, r)
+		}
+	})
+}

@@ -6,8 +6,9 @@ import (
 	"net/http"
 )
 
-func ping(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("pong"))
+var commonMiddlewares = []CustomMiddlewares{
+	ApiMethodvalidatorMiddleware,
+	LoggerMiddleware,
 }
 
 func main() {
@@ -15,9 +16,11 @@ func main() {
 	host := fmt.Sprintf("localhost%s", port)
 	// create a new server
 	mux := http.NewServeMux()
-	//handlers
-	mux.HandleFunc("/pings", ChainMiddlewares(ping))
-	mux.HandleFunc("/ping", ChainMiddlewares(ping, LoggerMiddleware))
+	// register routes
+	for route, handler := range AvailableRoutes {
+		mux.HandleFunc(route, ChainMiddlewares(handler.HandlerFunc, commonMiddlewares...))
+	}
+
 	// start server
 	log.Printf("Listening on %s", port)
 	log.Fatal(http.ListenAndServe(host, mux))
